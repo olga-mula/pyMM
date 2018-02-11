@@ -7,12 +7,12 @@ class SamplingStrategy():
 		self.parameterDomain = parameterDomain
 
 class SamplingUniform(SamplingStrategy):
-	def __init__(self, parameterDomain, nSamplesPerDirection):
+	def __init__(self, parameterDomain, nSamplesPerParameter):
 		super().__init__(parameterDomain)
-		self.nSamplesPerDirection = nSamplesPerDirection # Tuple
+		self.nSamplesPerParameter = nSamplesPerParameter # Tuple
 		self.params = list()
 		for i, (pmin, pmax) in enumerate(parameterDomain):
-			self.params.append(np.linspace(pmin, pmax, num=nSamplesPerDirection[i], endpoint=True))
+			self.params.append(np.linspace(pmin, pmax, num=nSamplesPerParameter[i], endpoint=True))
 
 	def __iter__(self):
 		return itertools.product(*self.params)
