@@ -10,7 +10,7 @@ class Dictionary():
 		self.snapshot_list = self.__generateSnapshots()
 
 	def __generateSnapshots(self):
-		self.snapshot_list = list()
+		snapshot_list = list()
 		for param in self.samplingStrategy:
-			self.snapshot_list.append(Snapshot(self.solver, param))
-		self.snapshot_list[0].plot()
+			snapshot_list.append(Snapshot(self.solver, param))
+		return snapshot_list

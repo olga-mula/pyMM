@@ -21,7 +21,7 @@ class DiffusionCheckerboard(Solver):
 		super().__init__(fem_degree, spatial_dimension, spatial_dofs_per_direction)
 		self.diffusion_coef_partition_level = diffusion_coef_partition_level
 		self.mesh = UnitHyperCube(self.spatial_dofs_per_direction)
-		
+
 	def compute_solution(self, param):
 		"""
 		Poisson equation with Dirichlet conditions.
@@ -106,6 +106,6 @@ class DiffusionCheckerboard(Solver):
 			plt.show()
 		# Save snapshot to file in VTK format
 		if save:
-			filename = self.problem_type+'/solution.pvd'
+			filename = 'img/solution_diffusion_checkerboard.pvd'
 			vtkfile = File(filename)
 			vtkfile << u
