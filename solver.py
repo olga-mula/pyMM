@@ -2,6 +2,9 @@ from dolfin import *
 import numpy as np
 import itertools
 
+from rbConstruction import RBconstructionRandom, RBconstructionPCA
+from space import HilbertSpace
+
 # Class for the Hypercube mesh
 def UnitHyperCube(divisions):
 	mesh_classes = [UnitIntervalMesh, UnitSquareMesh, UnitCubeMesh]
@@ -10,7 +13,8 @@ def UnitHyperCube(divisions):
 	return mesh
 
 class Solver():
-	def __init__(self, fem_degree, spatial_dimension, spatial_dofs_per_direction):
+	def __init__(self, ambient_space, fem_degree, spatial_dimension, spatial_dofs_per_direction):
+		self.ambient_space = ambient_space
 		self.fem_degree = fem_degree
 		self.spatial_dimension = spatial_dimension
 		self.spatial_dofs_per_direction = spatial_dofs_per_direction   # [ dofs_x, dofs_y, ...]
@@ -18,7 +22,7 @@ class Solver():
 class DiffusionCheckerboard(Solver):
 
 	def __init__(self, fem_degree, spatial_dimension, spatial_dofs_per_direction, diffusion_coef_partition_level):
-		super().__init__(fem_degree, spatial_dimension, spatial_dofs_per_direction)
+		super().__init__(HilbertSpace('H10'), fem_degree, spatial_dimension, spatial_dofs_per_direction)
 		self.diffusion_coef_partition_level = diffusion_coef_partition_level
 		self.mesh = UnitHyperCube(self.spatial_dofs_per_direction)
 

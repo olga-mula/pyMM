@@ -3,9 +3,9 @@ from sampling import SamplingStrategy, SamplingUniform, SamplingRandom
 from solver import DiffusionCheckerboard 
 from dictionary import Dictionary
 from rbConstruction import RBconstructionRandom
-from basis import ReducedBasis
+from space import ReducedSpace
 
-# Define solver
+# Define solver. Here we use the diffusion checkerboard problem
 fem_degree = 1
 spatial_dofs_per_direction = [100, 100]
 spatial_dimension = len(spatial_dofs_per_direction)
@@ -16,13 +16,11 @@ solver = DiffusionCheckerboard(fem_degree, spatial_dimension, spatial_dofs_per_d
 
 # Define parameter domain
 parameterDomain = [(1., 10.), (2., 3.), (0.1, 7.), (1., 8.)]
-if len(parameterDomain) != n_partition:
-	print("Error: parameter domain must have same length as n_partition")
-	exit(1)
-nSamplesPerParameter = [2, 2, 1, 1]
-if len(parameterDomain) != n_partition:
-	print("Error: nSamplesPerParameter must have same length as parameterDomain")
-	exit(1)
+assert len(parameterDomain) == n_partition
+
+nSamplesPerParameter = [3, 3, 1, 1]
+assert nSamplesPerParameter != n_partition
+
 parameterDomain  = ParameterDomain(parameterDomain)
 samplingStrategy = SamplingUniform(parameterDomain, nSamplesPerParameter)
 # samplingStrategy = SamplingRandom(parameterDomain, 4)
@@ -31,9 +29,11 @@ samplingStrategy = SamplingUniform(parameterDomain, nSamplesPerParameter)
 dictionary = Dictionary(solver, samplingStrategy)
 
 # Define reduced basis
-n = 3
+n = 1
 rbConstructionStrategy = RBconstructionRandom(dictionary, n)
-Vn = ReducedBasis(rbConstructionStrategy)
+Vn = ReducedSpace(rbConstructionStrategy)
+
+Vn.project(dictionary.snapshot_list[0] * 2.)
 
 
 
