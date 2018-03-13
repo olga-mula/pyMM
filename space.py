@@ -2,7 +2,6 @@ import numpy as np
 import scipy.linalg
 
 from fenics import *
-# from functions import FE_function, Snapshot
 
 class HilbertSpace():
 	def __init__(self, norm_type):
@@ -61,7 +60,7 @@ class HilbertSpace():
 				G[j,i] = G[i,j]
 		return G
 
-class ReducedSpace(HilbertSpace):
+class Space(HilbertSpace):
 	def __init__(self, rbConstructionStrategy):
 		self.norm_type, self.basis \
 			= rbConstructionStrategy.generateBasis() # List of snapshots

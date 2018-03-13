@@ -2,7 +2,6 @@ from dolfin import *
 import numpy as np
 import itertools
 
-from rbConstruction import RBconstructionRandom, RBconstructionPCA
 from space import HilbertSpace
 
 # Class for the Hypercube mesh

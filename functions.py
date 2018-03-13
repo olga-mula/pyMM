@@ -93,3 +93,13 @@ class Snapshot(FE_function):
 
 	def plot(self):
 		return self.solver.plot(self.fun)
+
+class Sensor(FE_function):
+	def __init__(self, solver, param):
+		super().__init__(solver.ambient_space, solver.compute_solution(param))
+		self.solver = solver # Not sure if we need this
+		self.param = param
+
+	def plot(self):
+		return self.solver.plot(self.fun)
+
