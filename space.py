@@ -4,6 +4,12 @@ import scipy.linalg
 from fenics import *
 
 class HilbertSpace():
+	"""
+		This is the ambient space, which gives the norm and the inner product.
+		We can also do linear combinations and orthonormalize a family of functions.
+		The functions of the space are of type FE_function. They can also be
+		of type Snapshot or Sensor which inherit from FE_function.
+	"""
 	def __init__(self, norm_type):
 		self.norm_type = norm_type
 
@@ -25,10 +31,10 @@ class HilbertSpace():
 		u_p = None
 		for i, c_i in enumerate(c):
 			if i==0:
-				u_p = vecs[i] * c_i
+				u_p = c_i * vecs[i]
 			else:
 				if c_i != 0:
-					u_p += vecs[i] * c_i
+					u_p += c_i * vecs[i]
 		return u_p
 
 	# vecs: list of snapshots
@@ -37,12 +43,14 @@ class HilbertSpace():
 		if len(vecs) == 0:
 			return vecs
 		else:
-			# We do a cholesky factorisation rather than a Gram Schmidt, as
-			# we have a symmetric +ve definite matrix, so this is a cheap and
-			# easy way to get an orthonormal basis from our previous basis.
-			# Indeed, A = QR = LL^T and A^TA = R^TR = LL^T so L=R^T
+			"""
+				We do a cholesky factorisation rather than a Gram Schmidt, as
+				we have a symmetric +ve definite matrix, so this is a cheap and
+				easy way to get an orthonormal basis from our previous basis.
+				Indeed, A = QR = LL^T and A^TA = R^TR = LL^T so L=R^T
+			"""
 			if grammian is None:
-				grammian = self.computeGrammian(vecs)
+				grammian = self.make_grammian(vecs)
 			L = np.linalg.cholesky(grammian)
 			L_inv = scipy.linalg.lapack.dtrtri(L.T)[0]
 			ortho_vecs = list()
@@ -51,7 +59,7 @@ class HilbertSpace():
 
 			return ortho_vecs
 
-	def computeGrammian(self, vecs):
+	def make_grammian(self, vecs):
 		n = len(vecs)
 		G = np.zeros((n, n))
 		for i in range(self.dim):
@@ -61,11 +69,14 @@ class HilbertSpace():
 		return G
 
 class Space(HilbertSpace):
+	"""
+		A finite dimensional space of the Hilbert space.
+	"""
 	def __init__(self, rbConstructionStrategy):
 		self.norm_type, self.basis \
 			= rbConstructionStrategy.generateBasis() # List of snapshots
 		self.dim   = len(self.basis)
-		self.grammian = self.computeGrammian(self.basis)
+		self.grammian = self.make_grammian(self.basis)
 		self.onb = self.orthonormalize(self.basis, grammian=self.grammian)
 
 	def project(self, fe_function):

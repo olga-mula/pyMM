@@ -2,15 +2,27 @@ from dolfin import *
 from expression import RadialFunctionExpression
 
 class RieszRadialFunction():
+	"""
+		This class computes the Riesz representer of the radial function
+			phi_{x, sigma}(y) = C exp( -|| y - xi ||/2 sigma^2 )
+		The constant C is chosen so that phi is normalized in the ambient space
+	"""
 	def __init__(self, ambient_space, fem_degree, mesh):
 		self.ambient_space = ambient_space
 		self.fem_degree = fem_degree
 		self.mesh = mesh
 
 	def compute_solution(self, param):
+		"""
+			For the function
+				phi_{x, sigma}(y) = C exp( -|| y - xi ||/2 sigma^2 )
+			we define
+				param = [ x, sigma ]
+		"""
 		norm_type = self.ambient_space.norm_type
 		V = FunctionSpace(self.mesh, "P", self.fem_degree)
-		assert len(param) > 1  # We need at least one location in 1d and sigma
+		if len(param) < 2:
+			raise Exception('Wrong parameter input for RieszRadialFunction')
 		pos = param[:-1]
 		sigma = param[-1]
 
@@ -47,8 +59,7 @@ class RieszRadialFunction():
 
 			return u
 		else:
-			print('Unknown norm_type in Riesz compute_solution')
-			exit(-1)
+			raise Exception('Unknown norm_type in Riesz compute_solution')
 
 	def plot(self, u, seeOnScreen= True, save=True, seeMesh = False):
 		# Visualize plot and mesh

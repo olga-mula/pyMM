@@ -3,6 +3,11 @@ from solver import Solver, DiffusionCheckerboard
 import copy
 
 class FE_function():
+	"""
+		This is a function living in an ambient Hilbert space.
+		Basic operations like +, -, *(scalar), /(scalar), inner product and norm are supported
+		We can also plot them for visualization.
+	"""
 	# Remark: We assume that self and other have the same ambient_space and fem function_space
 
 	def __init__(self, ambient_space, function):
@@ -47,6 +52,8 @@ class FE_function():
 		self.fun.vector()[:] = self.fun.vector().get_local() * c.vector().get_local()
 		return self
 
+	__rmul__ = __mul__
+
 	# Division by scalar
 	def __truediv__(self, other):
 		""" other must be a scalar here """
@@ -70,7 +77,7 @@ class FE_function():
 	def norm(self):
 		return norm(self.fun, norm_type=self.ambient_space.norm_type)
 
-	def plot(self, seeOnScreen= True, save=True, seeMesh = False):
+	def plot(self, seeOnScreen= True, save=False, seeMesh = False):
 		# Visualize plot and mesh
 		if seeOnScreen:
 			plot(self.fun)
@@ -85,6 +92,9 @@ class FE_function():
 			vtkfile << self.fun
 
 class Snapshot(FE_function):
+	"""
+		We assume that these functions are solutions of a PDE.
+	"""
 	def __init__(self, solver, param):
 		super().__init__(solver.ambient_space, solver.compute_solution(param))
 		self.solver = solver # Not sure if we need this
@@ -95,6 +105,9 @@ class Snapshot(FE_function):
 		return self.solver.plot(self.fun)
 
 class Sensor(FE_function):
+	"""
+		A function of type Sensor is the Riesz representer of a linear functional.
+	"""
 	def __init__(self, solver, param):
 		super().__init__(solver.ambient_space, solver.compute_solution(param))
 		self.solver = solver # Not sure if we need this
