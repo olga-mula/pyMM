@@ -1,5 +1,7 @@
+import numpy as np
+
 from fenics import *
-from solver import Solver, DiffusionCheckerboard
+from solver import DiffusionCheckerboard
 import copy
 
 class FE_function():
@@ -12,7 +14,7 @@ class FE_function():
 
 	def __init__(self, ambient_space, function):
 		self.ambient_space = ambient_space
-		self.fun = function  # function should be of type Function from dolfin
+		self.fun = function
 
 	# Addition of two FE_functions
 	def __add__(self, other):
@@ -91,28 +93,24 @@ class FE_function():
 			vtkfile = File(filename)
 			vtkfile << self.fun
 
+	def _new_helper(self, filename, kw):
+		return cls.__new__(cls, value, **kw)
+
 class Snapshot(FE_function):
 	"""
 		We assume that these functions are solutions of a PDE.
 	"""
-	def __init__(self, solver, param):
-		super().__init__(solver.ambient_space, solver.compute_solution(param))
-		self.solver = solver # Not sure if we need this
+	def __init__(self, ambient_space, function, param):
+		super().__init__(ambient_space, function)
 		self.param = param
-		self.measure=0 # TODO: measures of solution
-
-	def plot(self):
-		return self.solver.plot(self.fun)
+		# self.measure = np.array([0.]) # TODO: measures of solution
+		# self.filename = "_".join(np.char.mod('%14.8E', self.param))
 
 class Sensor(FE_function):
 	"""
 		A function of type Sensor is the Riesz representer of a linear functional.
 	"""
-	def __init__(self, solver, param):
-		super().__init__(solver.ambient_space, solver.compute_solution(param))
-		self.solver = solver # Not sure if we need this
+	def __init__(self, ambient_space, function, param):
+		super().__init__(ambient_space, function)
 		self.param = param
-
-	def plot(self):
-		return self.solver.plot(self.fun)
 

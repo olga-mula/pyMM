@@ -39,7 +39,7 @@ class RieszRadialFunction():
 
 			# Source term and boundary condition
 			u_bc = Constant(0.)
-			f = RadialFunctionExpression(param=param, degree=self.fem_degree+2)
+			f = RadialFunctionExpression(param, degree = self.fem_degree+2)
 
 			def boundary(x, on_boundary):
 			    return on_boundary

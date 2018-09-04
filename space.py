@@ -72,12 +72,12 @@ class Space(HilbertSpace):
 	"""
 		A finite dimensional space of the Hilbert space.
 	"""
-	def __init__(self, rbConstructionStrategy):
-		self.norm_type, self.basis \
-			= rbConstructionStrategy.generateBasis() # List of snapshots
-		self.dim   = len(self.basis)
-		self.grammian = self.make_grammian(self.basis)
-		self.onb = self.orthonormalize(self.basis, grammian=self.grammian)
+	def __init__(self, basis):
+		self.basis     = basis
+		self.norm_type = basis[0].ambient_space.norm_type
+		self.dim       = len(self.basis)
+		self.grammian  = self.make_grammian(self.basis)
+		self.onb       = self.orthonormalize(self.basis,grammian=self.grammian)
 
 	def project(self, fe_function):
 		c = np.asarray( [fe_function.dot(basisFun) for basisFun in self.onb] )

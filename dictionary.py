@@ -2,27 +2,23 @@ from fenics import *
 from functions import Snapshot, Sensor
 
 class DictionaryFactory():
-	def __init__(self, samplingStrategy):
+	def __init__(self, problem, samplingStrategy, typeFactory='snapshots'):
+		self.problem = problem
 		self.samplingStrategy = samplingStrategy
+		self.typeFactory = typeFactory	
 
-class DictionaryFactorySnapshots(DictionaryFactory):
-	def __init__(self, solver, samplingStrategy):
-		super().__init__(samplingStrategy)
-		self.solver = solver
+	def create(self):
+		dictionary = list()
 
-	def generateSnapshots(self):
-		snapshot_list = list()
-		for param in self.samplingStrategy:
-			snapshot_list.append(Snapshot(self.solver, param))
-		return snapshot_list
-
-class DictionaryFactorySensors(DictionaryFactory):
-	def __init__(self, solver, samplingStrategy):
-		super().__init__(samplingStrategy)
-		self.solver = solver
-
-	def generateSensors(self):
-		sensor_list = list()
-		for param in self.samplingStrategy:
-			sensor_list.append(Sensor(self.solver, param))
-		return sensor_list
+		if self.typeFactory == 'snapshots':
+			for param in self.samplingStrategy:			
+				u = self.problem.compute_solution(param)
+				dictionary.append(Snapshot(self.problem.ambientSpace(), u, param))
+		elif self.typeFactory == 'sensors':
+			for param in self.samplingStrategy:	
+				w = self.problem.compute_riesz_sensor(param)
+				dictionary.append(Sensor(self.problem.ambientSpace(), w, param))
+		else:
+			raise ValueError('Value of typeFactory not supported.')
+			
+		return dictionary

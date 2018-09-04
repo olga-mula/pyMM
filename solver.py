@@ -2,6 +2,7 @@ from dolfin import *
 import numpy as np
 import itertools
 
+from riesz import RieszRadialFunction
 from space import HilbertSpace
 
 # Class for the Hypercube mesh
@@ -11,37 +12,81 @@ def UnitHyperCube(divisions):
 	mesh = mesh_classes[d - 1](*divisions)
 	return mesh
 
-class Solver():
-	def __init__(self, ambient_space, fem_degree, spatial_dimension, spatial_dofs_per_direction):
-		self.ambient_space = ambient_space
-		self.fem_degree = fem_degree
-		self.spatial_dimension = spatial_dimension
-		self.spatial_dofs_per_direction = spatial_dofs_per_direction   # [ dofs_x, dofs_y, ...]
+class DiffusionCheckerboard():
 
-class DiffusionCheckerboard(Solver):
-
-	def __init__(self, fem_degree, spatial_dimension, spatial_dofs_per_direction, diffusion_coef_partition_level):
-		super().__init__(HilbertSpace('H10'), fem_degree, spatial_dimension, spatial_dofs_per_direction)
-		self.diffusion_coef_partition_level = diffusion_coef_partition_level
-		self.mesh = UnitHyperCube(self.spatial_dofs_per_direction)
-
-	def compute_solution(self, param):
-		"""
-		Poisson equation with Dirichlet conditions.
+	"""
+		Poisson equation with Dirichlet BC.
 		Domain: Unit hypercube (any dimension >= 1 supported)
 
-		  \div( \kappa \grad(u) ) = f    in the unit hypercube
-		            u = u_D              on the boundary
+		  div( kappa grad(u) ) = f    in the unit hypercube
+		            		 u = u_D  on the boundary
 
 		  u_D = 0
 		  f = 1
 
 		  kappa:
-		  	- Piecewise constant on a partition of level l.
+		  	- Piecewise constant on a partition of level l in {0,1,...}
 		  	- Level l: each coordinate is divided into 2^l segments.
 		  	- The value in each subdomain ranges in [1,10] and is generated randomly
 		"""
 
+	def __init__(self, fem_degree=1, dim=2, nx=[100, 100], l=1):
+		self.fem_degree = fem_degree # FEM degree
+		self.dim  = dim              # Spatial dimension
+		self.nx   = nx     # Spatial dofs per direction: [dofs_x, dofs_y, ...]
+		self.l    = l      # Partition level for diffusion coefficient
+		self.n_param = (1+self.l)**self.dim # Number of parameters
+		self.mesh = UnitHyperCube(self.nx)
+
+	@staticmethod
+	def problemType():
+		return 'DiffusionCheckerboard'
+
+	@staticmethod
+	def ambientSpace():
+		return HilbertSpace('H10')
+
+	@staticmethod
+	def get_info():
+		return 'Problem type: ' + DiffusionCheckerboard.problemType() + '\n'
+
+	# Parameters (diffusion coefficient)
+	def paramRange(self):
+		# Returns [ (param1_min, param1_max), (param2_min, param_2max), ...]
+		interval = (1.,10.)
+		return list(itertools.repeat(interval, times=self.n_param)) # [(1., 10.), ...]
+
+	def nSamplesPerParameter(self):
+		n = 2
+		return n * np.ones(self.n_param)
+
+	# Sensors
+	def n_sensors_per_direction(self):
+		n = 10
+		return n * np.ones(self.dim) 
+
+	def position_range_sensor(self):
+		"""
+			Returns [ (x0_min, x0_max), (x1_min, x1_max), ...]
+		"""
+		interval = (0.1,0.9)
+		return list(itertools.repeat(interval, times=self.dim))
+
+	def n_sigma_sensors(self):
+		return 1
+
+	def sigma_range_sensor(self):
+		"""
+			Returns (sigma_min, sigma_max)
+		"""
+		return (0.05, 0.1)
+
+	# Solver
+	def compute_solution(self, param):
+		"""
+			Compute solution for certain parameters for the diffusion coefficient
+		"""
+		
 		# Subdomain class
 		class Omega(SubDomain):
 			def __init__(self, x_min, x_max):
@@ -59,7 +104,7 @@ class DiffusionCheckerboard(Solver):
 		domains.set_all(0)
 
 		# kappa and sub-domain instances
-		L = self.diffusion_coef_partition_level
+		L = self.l
 		level_index_list = \
 			list(itertools.product(list(range(L+1)), repeat=dim)) 
 		omega = list() # subdomains
@@ -98,6 +143,18 @@ class DiffusionCheckerboard(Solver):
 
 		return u
 
+	# Riesz representation of the sensors
+	def compute_riesz_sensor(self, param_sensor):
+		"""
+			For the function
+				phi_{x, sigma}(y) = C exp( -|| y - xi ||/2 sigma^2 )
+			we define
+				param_sensor = [ x, sigma ]
+		"""
+
+		rieszproblem = RieszRadialFunction(DiffusionCheckerboard.ambientSpace(), self.fem_degree, self.mesh)
+
+		return rieszproblem.compute_solution(param_sensor)
 
 	def plot(self, u, seeOnScreen= True, save=True, seeMesh = False):
 		# Visualize plot and mesh
